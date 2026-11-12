@@ -12,16 +12,16 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from canasta.basket import BasketItem, active_basket_path, load_basket  # noqa: E402
 from dashboard import auth, builder, compute, store  # noqa: E402
 
 st.set_page_config(page_title="Canasta personal", page_icon="C", layout="wide")
 
-MARTS_DIR = Path(
-    os.getenv("CANASTA_MARTS_DIR", str(Path(__file__).resolve().parents[1] / "data" / "marts"))
-)
+MARTS_DIR = Path(os.getenv("CANASTA_MARTS_DIR", str(ROOT / "data" / "marts")))
 DATA_URL = os.getenv(
     "CANASTA_DATA_URL",
     "https://raw.githubusercontent.com/juanmas-hub/canasta-personal/data/marts",
