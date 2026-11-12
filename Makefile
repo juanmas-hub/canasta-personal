@@ -36,6 +36,7 @@ fixtures:
 	uv run python scripts/make_fixtures.py
 
 dbt-fixtures: fixtures
+	mkdir -p data
 	cd dbt && CANASTA_DATA_DIR=../tests/fixtures/raw CANASTA_DB=../data/fixtures.duckdb \
 		uv run dbt build --profiles-dir .
 

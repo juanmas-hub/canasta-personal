@@ -24,7 +24,7 @@ jobs:
           key: raw-${{ github.run_id }}
           restore-keys: |
             raw-
-      - run: echo "DATE=$(date -u +%F)" >> "$GITHUB_ENV"
+      - run: echo "DATE=$(TZ=America/Argentina/Buenos_Aires date +%F)" >> "$GITHUB_ENV"
       - run: make ingest DATE="$DATE"
       - run: make dbt
       - run: make marts
