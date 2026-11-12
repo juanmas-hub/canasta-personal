@@ -1,0 +1,68 @@
+# Ejemplo de canasta personal. Copiar a basket.yml y ajustar.
+# EANs reales del paquete SEPA 2026-11-03 (mayor cobertura en AR-C/AR-B).
+scope:
+  provincias:
+    - AR-C
+    - AR-B
+
+items:
+  - ean: "7790742335500"
+    label: "Leche entera La Serenísima 1 L"
+    qty_per_month: 8
+  - ean: "7793890258769"
+    label: "Pan lactal Lactal 315 g"
+    qty_per_month: 4
+  - ean: "7790070433114"
+    label: "Arroz Gallo Oro 500 g"
+    qty_per_month: 2
+  - ean: "7790070336293"
+    label: "Fideos Matarazzo 500 g"
+    qty_per_month: 3
+  - ean: "7798316700815"
+    label: "Aceite de girasol Legítimo 1.5 L"
+    qty_per_month: 1
+  - ean: "7792540250450"
+    label: "Azúcar Ledesma 1 kg"
+    qty_per_month: 1
+  - ean: "7790387015324"
+    label: "Yerba mate Mañanita 500 g"
+    qty_per_month: 2
+  - ean: "7790550000157"
+    label: "Café molido La Planta 250 g"
+    qty_per_month: 1
+  - ean: "7792180140708"
+    label: "Harina Pureza 1 kg"
+    qty_per_month: 1
+  - ean: "7790040143234"
+    label: "Galletitas Chocolinas 250 g"
+    qty_per_month: 2
+  - ean: "7790895645778"
+    label: "Agua mineral Smartwater 591 ml"
+    qty_per_month: 6
+  - ean: "7790895000997"
+    label: "Coca-Cola 2.25 L"
+    qty_per_month: 2
+  - ean: "7790250026075"
+    label: "Papel higiénico Elite 4x30 m"
+    qty_per_month: 1
+  - ean: "7790990003039"
+    label: "Detergente Magistral 500 ml"
+    qty_per_month: 1
+  - ean: "7898422746827"
+    label: "Jabón Dove 90 g"
+    qty_per_month: 2
+  - ean: "7791337061385"
+    label: "Queso crema Casancrem 290 g"
+    qty_per_month: 1
+  - ean: "7790580138868"
+    label: "Puré de tomate La Campagnola 530 g"
+    qty_per_month: 2
+  - ean: "7793940054006"
+    label: "Manteca La Serenísima 200 g"
+    qty_per_month: 1
+  - ean: "7791337008694"
+    label: "Yogur Danonino 185 g"
+    qty_per_month: 4
+  - ean: "7790670052371"
+    label: "Medallón de carne Paty 276 g"
+    qty_per_month: 2

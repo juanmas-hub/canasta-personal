@@ -1,0 +1,22 @@
+select
+    fecha,
+    id_comercio,
+    id_bandera,
+    id_sucursal,
+    ean,
+    descripcion,
+    marca,
+    precio_lista,
+    precio_referencia,
+    cantidad_referencia,
+    unidad_referencia,
+    cantidad_presentacion,
+    unidad_presentacion,
+    promo1,
+    promo2,
+    provincia,
+    localidad,
+    cadena,
+    precio_por_unidad,
+    es_outlier
+from {{ ref('int_precio_normalizado') }}

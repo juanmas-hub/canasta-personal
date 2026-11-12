@@ -1,0 +1,35 @@
+name: daily-sepa
+
+on:
+  schedule:
+    - cron: "30 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.19"
+          enable-cache: true
+      - run: uv sync --frozen
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: raw-${{ github.run_id }}
+          restore-keys: |
+            raw-
+      - run: echo "DATE=$(date -u +%F)" >> "$GITHUB_ENV"
+      - run: make ingest DATE="$DATE"
+      - run: make dbt
+      - run: make marts
+      - run: uv run python -m canasta.cli prune
+      - run: ./scripts/publish_marts.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}

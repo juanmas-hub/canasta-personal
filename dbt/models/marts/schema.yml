@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: dim_producto
+    columns:
+      - name: ean
+        tests:
+          - not_null
+          - unique
+      - name: descripcion
+        tests:
+          - not_null
+
+  - name: dim_sucursal
+    columns:
+      - name: id_sucursal
+        tests:
+          - not_null
+      - name: cadena
+        tests:
+          - not_null
+
+  - name: dim_fecha
+    columns:
+      - name: fecha
+        tests:
+          - not_null
+          - unique
+
+  - name: fct_precio_diario
+    columns:
+      - name: fecha
+        tests:
+          - not_null
+      - name: ean
+        tests:
+          - not_null
+      - name: precio_lista
+        tests:
+          - not_null
+
+  - name: agg_precio_ean_diario
+    columns:
+      - name: fecha
+        tests:
+          - not_null
+      - name: ean
+        tests:
+          - not_null
+      - name: provincia
+        tests:
+          - not_null
+      - name: precio_mediana
+        tests:
+          - not_null
+
+  - name: mart_canasta_costo_diario
+    columns:
+      - name: fecha
+        tests:
+          - not_null
+      - name: cadena
+        tests:
+          - not_null

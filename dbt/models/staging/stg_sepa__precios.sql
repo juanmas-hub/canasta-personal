@@ -1,0 +1,20 @@
+select
+    cast(fecha as date) as fecha,
+    cast(id_comercio as varchar) as id_comercio,
+    cast(id_bandera as varchar) as id_bandera,
+    cast(id_sucursal as varchar) as id_sucursal,
+    cast(ean as varchar) as ean,
+    trim(descripcion) as descripcion,
+    trim(marca) as marca,
+    cast(precio_lista as double) as precio_lista,
+    cast(precio_referencia as double) as precio_referencia,
+    cast(cantidad_referencia as double) as cantidad_referencia,
+    trim(unidad_referencia) as unidad_referencia,
+    cast(cantidad_presentacion as double) as cantidad_presentacion,
+    trim(unidad_presentacion) as unidad_presentacion,
+    cast(promo1 as double) as promo1,
+    cast(promo2 as double) as promo2,
+    upper(trim(provincia)) as provincia,
+    trim(localidad) as localidad,
+    trim(cadena) as cadena
+from {{ source('raw', 'fct_precio_diario') }}

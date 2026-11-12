@@ -1,0 +1,12 @@
+# Canasta mínima para `docker compose up`: usa los EAN de los fixtures.
+scope:
+  provincias:
+    - AR-C
+
+items:
+  - ean: "7790000000010"
+    label: "Leche 1 L"
+    qty_per_month: 2
+  - ean: "7790000000027"
+    label: "Pan 500 g"
+    qty_per_month: 1

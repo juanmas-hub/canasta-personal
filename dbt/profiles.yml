@@ -1,0 +1,10 @@
+canasta:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('CANASTA_DB', '../data/canasta.duckdb') }}"
+      threads: 4
+      settings:
+        memory_limit: "4GB"
+        temp_directory: "{{ env_var('DUCKDB_TEMP_DIR', '../data/duckdb_tmp') }}"

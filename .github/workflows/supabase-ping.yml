@@ -1,0 +1,21 @@
+name: supabase-ping
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "sin SUPABASE_URL configurado; nada que pingear"
+            exit 0
+          fi
+          curl -fsS "$SUPABASE_URL/auth/v1/health" -H "apikey: $SUPABASE_ANON_KEY" > /dev/null
+          echo "Supabase despierto"
