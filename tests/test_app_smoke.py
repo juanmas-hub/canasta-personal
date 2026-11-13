@@ -98,8 +98,9 @@ def _app(logged_in: bool) -> AppTest:
 
 
 def test_sin_config_muestra_error(marts_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("SUPABASE_URL", raising=False)
-    monkeypatch.delenv("SUPABASE_ANON_KEY", raising=False)
+    from dashboard import auth
+
+    monkeypatch.setattr(auth, "sb_config", lambda: None)
 
     at = _app(logged_in=False)
 

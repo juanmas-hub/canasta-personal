@@ -182,39 +182,32 @@ with armar_tab:
     if results.empty:
         st.warning("No hay productos que coincidan con la búsqueda.")
     else:
-        st.caption(f"{len(results)} resultados (mostrando hasta 50). Poné unidades/mes y agregá.")
-        addable = results.assign(cantidad=0.0)[
-            ["descripcion", "marca", "presentacion", "n_cadenas", "ean", "cantidad"]
-        ]
-        addable = addable.rename(columns={"descripcion": "producto"})
-        edited_add = st.data_editor(
-            addable,
-            key="search_editor",
+        st.caption(
+            f"{len(results)} resultados (hasta 50). Hacé clic en una o más filas "
+            "para seleccionarlas y después agregalas."
+        )
+        epoch = st.session_state.get("search_epoch", 0)
+        event = st.dataframe(
+            results[["descripcion", "marca", "presentacion", "n_cadenas", "ean"]],
+            key=f"search_results_{epoch}",
             width="stretch",
             hide_index=True,
-            disabled=["producto", "marca", "presentacion", "n_cadenas", "ean"],
+            on_select="rerun",
+            selection_mode="multi-row",
         )
-        if st.button("Agregar a la canasta"):
-            by_ean = {item.ean: item for item in st.session_state["items"]}
-            for _, row in edited_add[edited_add["cantidad"] > 0].iterrows():
-                ean = str(row["ean"])
-                qty = float(row["cantidad"])
-                if ean in by_ean:
-                    current_item = by_ean[ean]
-                    by_ean[ean] = BasketItem(
-                        ean=ean,
-                        label=current_item.label,
-                        qty_per_month=current_item.qty_per_month + qty,
-                    )
-                else:
-                    by_ean[ean] = BasketItem(
-                        ean=ean,
-                        label=builder.item_label(
-                            row["producto"], row["marca"], row["presentacion"]
-                        ),
-                        qty_per_month=qty,
-                    )
-            st.session_state["items"] = list(by_ean.values())
+        selected = list(event.selection.rows)
+        qty = st.number_input(
+            "Unidades/mes por producto",
+            min_value=1.0,
+            value=1.0,
+            step=1.0,
+            key="search_qty",
+        )
+        if st.button(f"Agregar a la canasta ({len(selected)})", disabled=not selected):
+            st.session_state["items"] = builder.merge_items(
+                st.session_state["items"], results.iloc[selected], qty
+            )
+            st.session_state["search_epoch"] = epoch + 1
             st.rerun()
 
     uploaded = st.file_uploader("O subí un basket.yml", type=["yml", "yaml"])

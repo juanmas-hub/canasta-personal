@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 from canasta.basket import BasketItem
-from dashboard.builder import basket_yaml, parse_basket_upload, search_catalog
+from dashboard.builder import basket_yaml, merge_items, parse_basket_upload, search_catalog
 
 
 def catalog() -> pd.DataFrame:
@@ -61,3 +61,30 @@ def test_parse_basket_upload_rechaza_ean_invalido() -> None:
         pass
     else:
         raise AssertionError("un EAN inválido debe rechazarse")
+
+
+def test_merge_items_agrega_nuevo() -> None:
+    rows = catalog().head(1)
+    items = merge_items([], rows, 2.0)
+
+    assert len(items) == 1
+    assert items[0].ean == "7790000000010"
+    assert items[0].label == "Leche entera 1 L La Serenisima 1 L"
+    assert items[0].qty_per_month == 2.0
+
+
+def test_merge_items_suma_duplicado() -> None:
+    existing = [BasketItem(ean="7790000000010", label="Leche", qty_per_month=3.0)]
+    items = merge_items(existing, catalog().head(1), 2.0)
+
+    assert len(items) == 1
+    assert items[0].label == "Leche"
+    assert items[0].qty_per_month == 5.0
+
+
+def test_merge_items_ignora_cantidad_invalida() -> None:
+    existing = [BasketItem(ean="7790000000010", label="Leche", qty_per_month=3.0)]
+    items = merge_items(existing, catalog(), 0.0)
+
+    assert len(items) == 1
+    assert items[0].qty_per_month == 3.0

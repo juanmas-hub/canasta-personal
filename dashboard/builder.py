@@ -27,6 +27,23 @@ def item_label(descripcion: str | None, marca: str | None, presentacion: str | N
     return " ".join(parts) if parts else "producto"
 
 
+def merge_items(items: Sequence[BasketItem], rows: pd.DataFrame, qty: float) -> list[BasketItem]:
+    by_ean = {item.ean: item for item in items}
+    if qty <= 0:
+        return list(by_ean.values())
+    for _, row in rows.iterrows():
+        ean = str(row["ean"])
+        existing = by_ean.get(ean)
+        label = (
+            existing.label
+            if existing
+            else item_label(row.get("descripcion"), row.get("marca"), row.get("presentacion"))
+        )
+        current = existing.qty_per_month if existing else 0.0
+        by_ean[ean] = BasketItem(ean=ean, label=label, qty_per_month=current + qty)
+    return list(by_ean.values())
+
+
 def basket_yaml(items: Sequence[BasketItem], provincias: Sequence[str]) -> str:
     payload = {
         "scope": {"provincias": list(provincias)},
