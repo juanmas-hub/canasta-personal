@@ -189,7 +189,7 @@ with armar_tab:
         epoch = st.session_state.get("search_epoch", 0)
         event = st.dataframe(
             results[["descripcion", "marca", "presentacion", "n_cadenas", "ean"]],
-            key=f"search_results_{epoch}",
+            key=f"search_results_{epoch}_{query.strip().lower()}",
             width="stretch",
             hide_index=True,
             on_select="rerun",
