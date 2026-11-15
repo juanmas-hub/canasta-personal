@@ -44,6 +44,22 @@ def merge_items(items: Sequence[BasketItem], rows: pd.DataFrame, qty: float) -> 
     return list(by_ean.values())
 
 
+def merge_selection(
+    selected: dict[str, dict],
+    per_query: dict[str, set[str]],
+    last_query: str,
+    query: str,
+    now: dict[str, dict],
+) -> tuple[dict[str, dict], dict[str, set[str]]]:
+    """Reconcilia la selección global con la vista actual del buscador."""
+    if query != last_query:
+        return selected, per_query
+    prev = per_query.get(query, set())
+    merged = {ean: row for ean, row in selected.items() if ean not in prev}
+    merged.update(now)
+    return merged, {**per_query, query: set(now)}
+
+
 def basket_yaml(items: Sequence[BasketItem], provincias: Sequence[str]) -> str:
     payload = {
         "scope": {"provincias": list(provincias)},

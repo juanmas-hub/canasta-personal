@@ -49,6 +49,12 @@ def init_state() -> None:
         st.session_state["provincias"] = []
     if "loaded_db" not in st.session_state:
         st.session_state["loaded_db"] = False
+    if "selected_rows" not in st.session_state:
+        st.session_state["selected_rows"] = {}
+    if "query_selection" not in st.session_state:
+        st.session_state["query_selection"] = {}
+    if "selection_query" not in st.session_state:
+        st.session_state["selection_query"] = ""
 
 
 st.sidebar.title("Canasta personal")
@@ -183,8 +189,8 @@ with armar_tab:
         st.warning("No hay productos que coincidan con la búsqueda.")
     else:
         st.caption(
-            f"{len(results)} resultados (hasta 50). Hacé clic en una o más filas "
-            "para seleccionarlas y después agregalas."
+            f"{len(results)} resultados (hasta 50). Hacé clic en las filas que quieras: "
+            "la selección se mantiene al cambiar de búsqueda."
         )
         epoch = st.session_state.get("search_epoch", 0)
         event = st.dataframe(
@@ -195,7 +201,28 @@ with armar_tab:
             on_select="rerun",
             selection_mode="multi-row",
         )
-        selected = list(event.selection.rows)
+        q = query.strip().lower()
+        now: dict[str, dict] = {}
+        for i in event.selection.rows:
+            row = results.iloc[i]
+            ean = str(row["ean"])
+            now[ean] = {
+                "ean": ean,
+                "descripcion": row["descripcion"],
+                "marca": row["marca"],
+                "presentacion": row["presentacion"],
+            }
+        selected_rows, query_selection = builder.merge_selection(
+            st.session_state["selected_rows"],
+            st.session_state["query_selection"],
+            st.session_state["selection_query"],
+            q,
+            now,
+        )
+        st.session_state["selected_rows"] = selected_rows
+        st.session_state["query_selection"] = query_selection
+        st.session_state["selection_query"] = q
+        count = len(selected_rows)
         qty = st.number_input(
             "Unidades/mes por producto",
             min_value=1.0,
@@ -203,10 +230,18 @@ with armar_tab:
             step=1.0,
             key="search_qty",
         )
-        if st.button(f"Agregar a la canasta ({len(selected)})", disabled=not selected):
+        col_add, col_clear = st.columns([2, 1])
+        if col_add.button(f"Agregar a la canasta ({count})", disabled=count == 0):
             st.session_state["items"] = builder.merge_items(
-                st.session_state["items"], results.iloc[selected], qty
+                st.session_state["items"], pd.DataFrame(selected_rows.values()), qty
             )
+            st.session_state["selected_rows"] = {}
+            st.session_state["query_selection"] = {}
+            st.session_state["search_epoch"] = epoch + 1
+            st.rerun()
+        if col_clear.button("Limpiar selección", disabled=count == 0):
+            st.session_state["selected_rows"] = {}
+            st.session_state["query_selection"] = {}
             st.session_state["search_epoch"] = epoch + 1
             st.rerun()
 

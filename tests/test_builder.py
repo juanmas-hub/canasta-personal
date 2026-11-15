@@ -5,7 +5,13 @@ from __future__ import annotations
 import pandas as pd
 
 from canasta.basket import BasketItem
-from dashboard.builder import basket_yaml, merge_items, parse_basket_upload, search_catalog
+from dashboard.builder import (
+    basket_yaml,
+    merge_items,
+    merge_selection,
+    parse_basket_upload,
+    search_catalog,
+)
 
 
 def catalog() -> pd.DataFrame:
@@ -88,3 +94,48 @@ def test_merge_items_ignora_cantidad_invalida() -> None:
 
     assert len(items) == 1
     assert items[0].qty_per_month == 3.0
+
+
+def test_merge_selection_conserva_al_cambiar_busqueda() -> None:
+    selected = {"A": {"ean": "A"}}
+    per_query = {"queso": {"A"}}
+
+    merged, per = merge_selection(selected, per_query, "queso", "leche", {})
+
+    assert merged == selected
+    assert per == per_query
+
+
+def test_merge_selection_suma_en_la_misma_busqueda() -> None:
+    now = {"A": {"ean": "A"}, "B": {"ean": "B"}}
+    merged, per = merge_selection({"A": {"ean": "A"}}, {"queso": {"A"}}, "queso", "queso", now)
+
+    assert set(merged) == {"A", "B"}
+    assert per["queso"] == {"A", "B"}
+
+
+def test_merge_selection_desmarca_solo_ese_ean() -> None:
+    selected = {"A": {"ean": "A"}, "B": {"ean": "B"}}
+    merged, per = merge_selection(
+        selected, {"queso": {"A", "B"}}, "queso", "queso", {"A": {"ean": "A"}}
+    )
+
+    assert set(merged) == {"A"}
+    assert per["queso"] == {"A"}
+
+
+def test_merge_selection_acumula_entre_busquedas() -> None:
+    merged, per = merge_selection({"A": {"ean": "A"}}, {"queso": {"A"}}, "queso", "leche", {})
+    merged, per = merge_selection(merged, per, "leche", "leche", {"B": {"ean": "B"}})
+
+    assert set(merged) == {"A", "B"}
+    assert per == {"queso": {"A"}, "leche": {"B"}}
+
+
+def test_merge_selection_volver_a_busqueda_anterior_conserva() -> None:
+    selected = {"A": {"ean": "A"}}
+
+    merged, per = merge_selection(selected, {"queso": {"A"}}, "leche", "queso", {})
+
+    assert merged == selected
+    assert per == {"queso": {"A"}}
