@@ -51,10 +51,10 @@ def init_state() -> None:
         st.session_state["loaded_db"] = False
     if "selected_rows" not in st.session_state:
         st.session_state["selected_rows"] = {}
-    if "query_selection" not in st.session_state:
-        st.session_state["query_selection"] = {}
-    if "selection_query" not in st.session_state:
-        st.session_state["selection_query"] = ""
+    if "selection_views" not in st.session_state:
+        st.session_state["selection_views"] = {}
+    if "selection_view" not in st.session_state:
+        st.session_state["selection_view"] = ""
 
 
 st.sidebar.title("Canasta personal")
@@ -185,6 +185,7 @@ with armar_tab:
         "Nombre o marca (ej: leche, yerba, serenisima)", key="search_query", value=""
     )
     results = builder.search_catalog(catalog, query)
+    epoch = st.session_state.get("search_epoch", 0)
     if results.empty:
         st.warning("No hay productos que coincidan con la búsqueda.")
     else:
@@ -192,16 +193,16 @@ with armar_tab:
             f"{len(results)} resultados (hasta 50). Hacé clic en las filas que quieras: "
             "la selección se mantiene al cambiar de búsqueda."
         )
-        epoch = st.session_state.get("search_epoch", 0)
+        q = query.strip().lower()
+        view = f"search_results_{epoch}_{q}"
         event = st.dataframe(
             results[["descripcion", "marca", "presentacion", "n_cadenas", "ean"]],
-            key=f"search_results_{epoch}_{query.strip().lower()}",
+            key=view,
             width="stretch",
             hide_index=True,
             on_select="rerun",
             selection_mode="multi-row",
         )
-        q = query.strip().lower()
         now: dict[str, dict] = {}
         for i in event.selection.rows:
             row = results.iloc[i]
@@ -211,39 +212,69 @@ with armar_tab:
                 "descripcion": row["descripcion"],
                 "marca": row["marca"],
                 "presentacion": row["presentacion"],
+                "qty": st.session_state["selected_rows"].get(ean, {}).get("qty", 1.0),
             }
-        selected_rows, query_selection = builder.merge_selection(
+        selected_rows, selection_views = builder.merge_selection(
             st.session_state["selected_rows"],
-            st.session_state["query_selection"],
-            st.session_state["selection_query"],
-            q,
+            st.session_state["selection_views"],
+            st.session_state["selection_view"],
+            view,
             now,
         )
         st.session_state["selected_rows"] = selected_rows
-        st.session_state["query_selection"] = query_selection
-        st.session_state["selection_query"] = q
-        count = len(selected_rows)
-        qty = st.number_input(
-            "Unidades/mes por producto",
-            min_value=1.0,
-            value=1.0,
-            step=1.0,
-            key="search_qty",
+        st.session_state["selection_views"] = selection_views
+        st.session_state["selection_view"] = view
+
+    selected_rows = st.session_state["selected_rows"]
+    count = len(selected_rows)
+    if count:
+        st.markdown("**Seleccionados**")
+        panel = pd.DataFrame(
+            [
+                {
+                    "ean": ean,
+                    "producto": builder.item_label(
+                        r.get("descripcion"), r.get("marca"), r.get("presentacion")
+                    ),
+                    "unidades": float(r.get("qty", 1.0)),
+                    "quitar": False,
+                }
+                for ean, r in selected_rows.items()
+            ]
         )
-        col_add, col_clear = st.columns([2, 1])
-        if col_add.button(f"Agregar a la canasta ({count})", disabled=count == 0):
-            st.session_state["items"] = builder.merge_items(
-                st.session_state["items"], pd.DataFrame(selected_rows.values()), qty
-            )
-            st.session_state["selected_rows"] = {}
-            st.session_state["query_selection"] = {}
+        edited = st.data_editor(
+            panel,
+            key=f"selected_editor_{epoch}",
+            width="stretch",
+            hide_index=True,
+            disabled=["ean", "producto"],
+            column_config={"unidades": st.column_config.NumberColumn(min_value=1.0, step=1.0)},
+        )
+        remove = {str(r["ean"]) for _, r in edited.iterrows() if r["quitar"]}
+        for _, r in edited.iterrows():
+            ean = str(r["ean"])
+            if ean in selected_rows:
+                selected_rows[ean]["qty"] = float(r["unidades"])
+        if remove:
+            for ean in remove:
+                selected_rows.pop(ean, None)
             st.session_state["search_epoch"] = epoch + 1
             st.rerun()
-        if col_clear.button("Limpiar selección", disabled=count == 0):
-            st.session_state["selected_rows"] = {}
-            st.session_state["query_selection"] = {}
-            st.session_state["search_epoch"] = epoch + 1
-            st.rerun()
+
+    col_add, col_clear = st.columns([2, 1])
+    if col_add.button(f"Agregar a la canasta ({count})", disabled=count == 0):
+        st.session_state["items"] = builder.merge_items(
+            st.session_state["items"], pd.DataFrame(selected_rows.values())
+        )
+        st.session_state["selected_rows"] = {}
+        st.session_state["selection_views"] = {}
+        st.session_state["search_epoch"] = epoch + 1
+        st.rerun()
+    if col_clear.button("Limpiar selección", disabled=count == 0):
+        st.session_state["selected_rows"] = {}
+        st.session_state["selection_views"] = {}
+        st.session_state["search_epoch"] = epoch + 1
+        st.rerun()
 
     uploaded = st.file_uploader("O subí un basket.yml", type=["yml", "yaml"])
     if uploaded is not None:

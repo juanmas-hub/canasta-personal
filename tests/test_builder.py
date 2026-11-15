@@ -70,8 +70,8 @@ def test_parse_basket_upload_rechaza_ean_invalido() -> None:
 
 
 def test_merge_items_agrega_nuevo() -> None:
-    rows = catalog().head(1)
-    items = merge_items([], rows, 2.0)
+    rows = catalog().head(1).assign(qty=2.0)
+    items = merge_items([], rows)
 
     assert len(items) == 1
     assert items[0].ean == "7790000000010"
@@ -81,7 +81,7 @@ def test_merge_items_agrega_nuevo() -> None:
 
 def test_merge_items_suma_duplicado() -> None:
     existing = [BasketItem(ean="7790000000010", label="Leche", qty_per_month=3.0)]
-    items = merge_items(existing, catalog().head(1), 2.0)
+    items = merge_items(existing, catalog().head(1).assign(qty=2.0))
 
     assert len(items) == 1
     assert items[0].label == "Leche"
@@ -90,10 +90,23 @@ def test_merge_items_suma_duplicado() -> None:
 
 def test_merge_items_ignora_cantidad_invalida() -> None:
     existing = [BasketItem(ean="7790000000010", label="Leche", qty_per_month=3.0)]
-    items = merge_items(existing, catalog(), 0.0)
+    items = merge_items(existing, catalog().assign(qty=0.0))
 
     assert len(items) == 1
     assert items[0].qty_per_month == 3.0
+
+
+def test_merge_items_cantidades_distintas_por_producto() -> None:
+    items = merge_items([], catalog().assign(qty=[2.0, 3.0]))
+
+    assert {item.ean: item.qty_per_month for item in items} == {
+        "7790000000010": 2.0,
+        "7790000000027": 3.0,
+    }
+
+
+def test_merge_items_sin_columna_qty_no_agrega() -> None:
+    assert merge_items([], catalog()) == []
 
 
 def test_merge_selection_conserva_al_cambiar_busqueda() -> None:

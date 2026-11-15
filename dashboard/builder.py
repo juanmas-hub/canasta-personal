@@ -27,11 +27,13 @@ def item_label(descripcion: str | None, marca: str | None, presentacion: str | N
     return " ".join(parts) if parts else "producto"
 
 
-def merge_items(items: Sequence[BasketItem], rows: pd.DataFrame, qty: float) -> list[BasketItem]:
+def merge_items(items: Sequence[BasketItem], rows: pd.DataFrame) -> list[BasketItem]:
     by_ean = {item.ean: item for item in items}
-    if qty <= 0:
-        return list(by_ean.values())
     for _, row in rows.iterrows():
+        raw_qty = row.get("qty", 0)
+        qty = 0.0 if pd.isna(raw_qty) else float(raw_qty)
+        if qty <= 0:
+            continue
         ean = str(row["ean"])
         existing = by_ean.get(ean)
         label = (
@@ -46,18 +48,18 @@ def merge_items(items: Sequence[BasketItem], rows: pd.DataFrame, qty: float) -> 
 
 def merge_selection(
     selected: dict[str, dict],
-    per_query: dict[str, set[str]],
-    last_query: str,
-    query: str,
+    per_view: dict[str, set[str]],
+    last_view: str,
+    view: str,
     now: dict[str, dict],
 ) -> tuple[dict[str, dict], dict[str, set[str]]]:
     """Reconcilia la selección global con la vista actual del buscador."""
-    if query != last_query:
-        return selected, per_query
-    prev = per_query.get(query, set())
+    if view != last_view:
+        return selected, per_view
+    prev = per_view.get(view, set())
     merged = {ean: row for ean, row in selected.items() if ean not in prev}
     merged.update(now)
-    return merged, {**per_query, query: set(now)}
+    return merged, {**per_view, view: set(now)}
 
 
 def basket_yaml(items: Sequence[BasketItem], provincias: Sequence[str]) -> str:
